@@ -5,17 +5,18 @@ import sys
 import requests
 import json
 from requests.auth import HTTPBasicAuth
-from certlib import config_certificate, digicert_api_key, digicert_api_url, headers
+from certlib import config_certificate, digicert_api_key,\
+        digicert_api_url, headers
 
 
-def submit_csr_digicert(csr_obj,nodename, sans=[]):
-    order_ev_multi_endpoint=config_certificate.get('digicert',
-        'order_ev_multi_endpoint')
-    orga_unit = config_certificate.get('certificates','orga_unit')
-    orga_id = config_certificate.get('certificates','orga_id')
-    headers['Content-Type']="application/json"
+def submit_csr_digicert(csr_obj, nodename, sans=[]):
+    order_ev_multi_endpoint = config_certificate.get('digicert',
+                                                     'order_ev_multi_endpoint')
+    orga_unit = config_certificate.get('certificates', 'orga_unit')
+    orga_id = config_certificate.get('certificates', 'orga_id')
+    headers['Content-Type'] = "application/json"
     data = {
-        "certificate":{
+        "certificate": {
             "common_name": nodename,
             "dns_names": sans,
             "csr": str(csr_obj).replace("\\n", ""),
@@ -29,52 +30,47 @@ def submit_csr_digicert(csr_obj,nodename, sans=[]):
         },
 
     }
-    print(json.dumps(data))
     order_endpoint = "{}/{}".format(digicert_api_url, order_ev_multi_endpoint)
     response = requests.post(order_endpoint, data=json.dumps(data),
-            headers=headers)
-    print(response.text)
+                             headers=headers)
+    response.raise_for_status()
+
 
 def download_cert(cert_id):
 
-    download_endpoint=config_certificate.get('digicert',
-        'download_endpoint')
-    download_endpoint=download_endpoint.format(certificate_id=cert_id)
+    download_endpoint = config_certificate.get('digicert',
+                                               'download_endpoint')
+    download_endpoint = download_endpoint.format(certificate_id=cert_id)
     download_endpoint = "{}/{}".format(digicert_api_url, download_endpoint)
-    print(download_endpoint)
     # @todo: define how to save the response!
-    response = requests.get(download_endpoint,headers=headers)
-    print(response.status_code)
-    if response.status_code==200:
-        with open('/tmp/test.zip', 'wb') as f:
-            f.write(response.content)
-    # response = requests.post(order_endpoint, data=json.dumps(data),
-    #     headers=headers)
+    response = requests.get(download_endpoint, headers=headers)
+    response.raise_for_status()
+    with open('/tmp/test.zip', 'wb') as f:
+        f.write(response.content)
+
 
 def list_pending():
-    order_endpoint = "{}/{}".format(digicert_api_url,"report/request")
-    #order_endpoint = "{}/{}".format(digicert_api_url,"request")
-    response = requests.get(order_endpoint,headers=headers)
-    #json_obj = json.loads(response.text)
+    order_endpoint = "{}/{}".format(digicert_api_url, "report/request")
+    response = requests.get(order_endpoint, headers=headers)
+    response.raise_for_status()
     print(response.text)
-    #for an_obj in json_obj['requests']:
-    #    print(an_obj)
+
 
 # Generate Certificate Signing Request (CSR)
 def generate_CSR(nodename, sans=[]):
     try:
 
-        country_code = config_certificate.get('certificates','contry_code')
-        locality = config_certificate.get('certificates','locality')
-        state = config_certificate.get('certificates','state')
-        orga = config_certificate.get('certificates','orga')
-        datastore = config_certificate.get('certificates','datastore')
+        country_code = config_certificate.get('certificates', 'contry_code')
+        locality = config_certificate.get('certificates', 'locality')
+        state = config_certificate.get('certificates', 'state')
+        orga = config_certificate.get('certificates', 'orga')
+        datastore = config_certificate.get('certificates', 'datastore')
         # server_url=config_referentiel.get('referentiel','url')
     except Exception as e:
         print("Impossible to configure, config file or value missing")
         sys.exit(2)
-    csrfile = "{}/{}.csr".format(datastore,nodename)
-    keyfile = "{}/{}.key".format(datastore,nodename)
+    csrfile = "{}/{}.csr".format(datastore, nodename)
+    keyfile = "{}/{}.key".format(datastore, nodename)
     print(keyfile)
     TYPE_RSA = crypto.TYPE_RSA
     # Appends SAN to have 'DNS:'
@@ -97,13 +93,16 @@ def generate_CSR(nodename, sans=[]):
     # after  -> b"keyUsage"
 
     base_constraints = ([
-        crypto.X509Extension(b"keyUsage", False, b"Digital Signature, Non Repudiation, Key Encipherment"),
+        crypto.X509Extension(b"keyUsage", False,
+                             b"Digital Signature, Non Repudiation, \
+                             Key Encipherment"),
         crypto.X509Extension(b"basicConstraints", False, b"CA:FALSE"),
     ])
     x509_extensions = base_constraints
     # If there are SAN entries, append the base_constraints to include them.
     if ss:
-        san_constraint = crypto.X509Extension(str.encode("subjectAltName"), False, ss)
+        san_constraint = crypto.X509Extension(str.encode("subjectAltName"),
+                                              False, ss)
         x509_extensions.append(san_constraint)
     req.add_extensions(x509_extensions)
     # Utilizes generateKey function to kick off key generation.
@@ -114,7 +113,7 @@ def generate_CSR(nodename, sans=[]):
     # req.sign(key, "sha1")
     req.sign(key, "sha256")
     csr_content = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
-    submit_csr_digicert(csr_content,nodename, sans)
+    submit_csr_digicert(csr_content, nodename, sans)
     write_files(csrfile, req)
     write_files(keyfile, key)
 
