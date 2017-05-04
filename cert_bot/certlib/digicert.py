@@ -1,5 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from OpenSSL import crypto, SSL
-
 import sys
 import requests
 import json
@@ -40,8 +41,10 @@ def download_cert(cert_id):
         'download_endpoint')
     download_endpoint=download_endpoint.format(certificate_id=cert_id)
     download_endpoint = "{}/{}".format(digicert_api_url, download_endpoint)
+    print(download_endpoint)
     # @todo: define how to save the response!
     response = requests.get(download_endpoint,headers=headers)
+    print(response.status_code)
     if response.status_code==200:
         with open('/tmp/test.zip', 'wb') as f:
             f.write(response.content)
@@ -56,8 +59,9 @@ def list_pending():
     print(response.text)
     #for an_obj in json_obj['requests']:
     #    print(an_obj)
+
 # Generate Certificate Signing Request (CSR)
-def generateCSR(nodename, sans=[]):
+def generate_CSR(nodename, sans=[]):
     try:
 
         country_code = config_certificate.get('certificates','contry_code')
@@ -103,7 +107,7 @@ def generateCSR(nodename, sans=[]):
         x509_extensions.append(san_constraint)
     req.add_extensions(x509_extensions)
     # Utilizes generateKey function to kick off key generation.
-    key = generateKey(TYPE_RSA, 2048)
+    key = generate_pkey(TYPE_RSA, 2048)
     req.set_pubkey(key)
 
     # change to sha 256?
@@ -111,28 +115,25 @@ def generateCSR(nodename, sans=[]):
     req.sign(key, "sha256")
     csr_content = crypto.dump_certificate_request(crypto.FILETYPE_PEM, req)
     submit_csr_digicert(csr_content,nodename, sans)
-    generateFiles(csrfile, req)
-    generateFiles(keyfile, key)
+    write_files(csrfile, req)
+    write_files(keyfile, key)
 
     return req
 
 
 # Generate Private Key
-def generateKey(type, bits):
+def generate_pkey(type, bits):
     key = crypto.PKey()
     key.generate_key(type, bits)
     return key
 
 
 # Generate .csr/key files.
-def generateFiles(mkFile, request):
+def write_files(mkFile, request):
     if mkFile.endswith(".csr"):
         f = open(mkFile, "wb")
         f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, request))
         f.close()
-
-        # print test
-        #print(crypto.dump_certificate_request(crypto.FILETYPE_PEM, request))
 
     elif mkFile.endswith(".key"):
         f = open(mkFile, "wb")

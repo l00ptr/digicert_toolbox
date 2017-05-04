@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import argparse
 from certlib import digicert
 if __name__ == "__main__":
@@ -7,4 +9,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cert_id = args.cert_id
-    digicert.list_pending() 
+    digicert.list_pending()
+    digicert.download_cert(cert_id)
