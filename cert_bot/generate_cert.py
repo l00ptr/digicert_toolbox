@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import argparse
-from certlib import digicert
+from certlib.cert import CertificateController
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("name", help="Provide the FQDN", action="store")
@@ -10,6 +10,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    hostname = args.name
+    nodename = args.name
     sans = args.san
-    digicert.generate_CSR(hostname, sans)
+    cert_controller = CertificateController()
+    cert_controller.generate_and_submit_csr(nodename, sans)
