@@ -38,6 +38,15 @@ class CertificateController:
 
             transaction.commit()
 
+    def list_certificate(self):
+        for a_cert_key, a_cert in self.cert_storage.items():
+            try:
+                request_id = a_cert['csr_submission_result']['id']
+                print(a_cert_key)
+                print("Resquest # {}".format(request_id))
+            except:
+                pass
+
 
 class Certificate:
 

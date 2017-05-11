@@ -30,11 +30,10 @@ def submit_csr_digicert(csr, nodename, sans=[]):
 
     }
     order_endpoint = "{}/{}".format(digicert_api_url, order_ev_multi_endpoint)
-    return order_endpoint
-    # response = requests.post(order_endpoint, data=json.dumps(data),
-    #                          headers=headers)
-    # response.raise_for_status()
-    # return json.loads(response.text)
+    response = requests.post(order_endpoint, data=json.dumps(data),
+                             headers=headers)
+    response.raise_for_status()
+    return json.loads(response.text)
 
 
 def download_cert(cert_id):

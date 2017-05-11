@@ -11,8 +11,7 @@ def configure_storage():
     metadata_db_name = config_certificate.get('certificates',
                                               'metadata_db_name')
     storage_path = "{datastore}/{metadata_db_name}".format(datastore=datastore,
-                                                           metadata_db_name=
-                                                           metadata_db_name)
+                                                           metadata_db_name=metadata_db_name)
     storage = FileStorage.FileStorage(storage_path)
     db = DB(storage)
     connection = db.open()
