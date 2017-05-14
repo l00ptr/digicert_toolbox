@@ -7,7 +7,7 @@ import json
 import transaction
 from certlib import config_certificate, digicert_api_key,\
         digicert_api_url, headers
-from certlib.digicert import submit_csr_digicert
+from certlib.digicert import submit_csr_digicert, get_order_data, download_cert
 from certlib.persistent import configure_storage
 import traceback
 
@@ -32,20 +32,40 @@ class CertificateController:
             print("error thrown")
             traceback.print_exc()
         else:
-            self.cert_storage[nodename] = {'csr_submission_result':
-                                           csr_submission_result,
+            self.cert_storage[nodename] = {'csr_result': csr_submission_result,
                                            'certificate': cert}
 
             transaction.commit()
 
-    def list_certificate(self):
-        for a_cert_key, a_cert in self.cert_storage.items():
+    def list_certificates(self):
+        for nodename, a_cert in self.cert_storage.items():
             try:
-                request_id = a_cert['csr_submission_result']['id']
-                print(a_cert_key)
-                print("Resquest # {}".format(request_id))
+                print("="*80)
+                print(nodename)
+                request_id = a_cert['csr_result']['id']
+                request_status = a_cert['csr_result']['status']
+                cert = a_cert['certificate']
+                print("Resquest ID: {req_id}".format(req_id=request_id))
+                print("Status {req_status}".format(req_status=request_status))
+                try:
+                    print("Certificate ID: {cert_id}".format(
+                          cert_id=a_cert['csr_result']['certificate']['id']))
+                    print("{last_name} {first_name}".format(
+                          last_name=a_cert['csr_result']['user']['last_name'],
+                          first_name=a_cert['csr_result']['user']['first_name']))
+                except:
+                    print("No certificate found")
+                req_data = get_order_data(request_id)
+                self.cert_storage[nodename] = {'csr_result': req_data,
+                                               'certificate': cert}
+                transaction.commit()
             except:
                 pass
+
+    def download_cert(self, nodename):
+        download_cert(self.cert_storage[nodename]\
+                      ['csr_result']['certificate']['id'],
+                      nodename)
 
 
 class Certificate:
