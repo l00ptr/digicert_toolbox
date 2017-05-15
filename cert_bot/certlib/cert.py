@@ -52,7 +52,8 @@ class CertificateController:
                           cert_id=a_cert['csr_result']['certificate']['id']))
                     print("{last_name} {first_name}".format(
                           last_name=a_cert['csr_result']['user']['last_name'],
-                          first_name=a_cert['csr_result']['user']['first_name']))
+                          first_name=a_cert['csr_result']
+                                           ['user']['first_name']))
                 except:
                     print("No certificate found")
                 req_data = get_order_data(request_id)
@@ -63,8 +64,8 @@ class CertificateController:
                 pass
 
     def download_cert(self, nodename):
-        download_cert(self.cert_storage[nodename]\
-                      ['csr_result']['certificate']['id'],
+        download_cert(self.cert_storage[nodename]['csr_result']
+                                       ['certificate']['id'],
                       nodename)
 
 
