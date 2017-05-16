@@ -7,7 +7,8 @@ import json
 import transaction
 from certlib import config_certificate, digicert_api_key,\
         digicert_api_url, headers
-from certlib.digicert import submit_csr_digicert, get_order_data, download_cert
+from certlib.digicert import get_orders_data, get_order_data, submit_csr,\
+        download_cert, list_pending
 from certlib.persistent import configure_storage
 import traceback
 
@@ -27,7 +28,7 @@ class CertificateController:
                            self.locality, self.state, self.orga, sans)
         try:
             csr = cert.generate_CSR(self.datastore)
-            csr_submission_result = submit_csr_digicert(csr, nodename, sans)
+            csr_submission_result = submit_csr(csr, nodename, sans)
         except:
             print("error thrown")
             traceback.print_exc()
@@ -65,8 +66,16 @@ class CertificateController:
 
     def download_cert(self, nodename):
         download_cert(self.cert_storage[nodename]['csr_result']
-                                       ['certificate']['id'],
-                      nodename)
+                                       ['certificate']['id'], nodename)
+
+    def update_certificates_data(self):
+        orders_data = get_orders_data()
+        for an_order_data in orders_data['orders']:
+            nodename = an_order_data['certificate']['common_name']
+            if nodename not in self.cert_storage:
+                print("{} not in".format(nodename))
+                self.cert_storage[nodename] = {'csr_result': an_order_data}
+            transaction.commit()
 
 
 class Certificate:
