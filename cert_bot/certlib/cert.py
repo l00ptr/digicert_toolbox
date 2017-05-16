@@ -45,7 +45,7 @@ class CertificateController:
                 print(nodename)
                 request_id = a_cert['csr_result']['id']
                 request_status = a_cert['csr_result']['status']
-                cert = a_cert['certificate']
+
                 print("Resquest ID: {req_id}".format(req_id=request_id))
                 print("Status {req_status}".format(req_status=request_status))
                 try:
@@ -58,6 +58,7 @@ class CertificateController:
                 except:
                     print("No certificate found")
                 req_data = get_order_data(request_id)
+                cert = a_cert['certificate']
                 self.cert_storage[nodename] = {'csr_result': req_data,
                                                'certificate': cert}
                 transaction.commit()
@@ -72,10 +73,14 @@ class CertificateController:
         orders_data = get_orders_data()
         for an_order_data in orders_data['orders']:
             nodename = an_order_data['certificate']['common_name']
-            if nodename not in self.cert_storage:
-                print("{} not in".format(nodename))
-                self.cert_storage[nodename] = {'csr_result': an_order_data}
-            transaction.commit()
+            try:
+                certificate_data = self.cert_storage[nodename]['certificate']
+            except:
+                certificate_data = None
+
+            self.cert_storage[nodename] = {'csr_result': an_order_data,
+                                           'certificate': certificate_data}
+        transaction.commit()
 
 
 class Certificate:
