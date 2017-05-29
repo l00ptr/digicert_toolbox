@@ -8,16 +8,25 @@ from certlib import config_certificate, digicert_api_key,\
         digicert_api_url, headers
 
 
+def get_orders_data():
+    req_data_endpoint = config_certificate.get('digicert', 'orders_data')
+    req_data_endpoint = "{}/{}".format(digicert_api_url, req_data_endpoint)
+    response = requests.get(req_data_endpoint, headers=headers)
+    response.raise_for_status()
+    return json.loads(response.text)
+
+
 def get_order_data(order_id):
     req_data_endpoint = config_certificate.get('digicert', 'order_data')
     req_data_endpoint = req_data_endpoint.format(req_order_id=order_id)
     req_data_endpoint = "{}/{}".format(digicert_api_url,
                                        req_data_endpoint)
     response = requests.get(req_data_endpoint, headers=headers)
+    response.raise_for_status()
     return json.loads(response.text)
 
 
-def submit_csr_digicert(csr, nodename, sans=[]):
+def submit_csr(csr, nodename, sans=[]):
     order_ev_multi_endpoint = config_certificate.get('digicert',
                                                      'order_ev_multi_endpoint')
     orga_unit = config_certificate.get('certificates', 'orga_unit')
