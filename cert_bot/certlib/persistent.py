@@ -6,12 +6,13 @@ from certlib import config_certificate
 
 
 def configure_storage():
-
+    # Get datastore config
     datastore = config_certificate.get('certificates', 'datastore')
     metadata_db_name = config_certificate.get('certificates',
                                               'metadata_db_name')
-    storage_path = "{datastore}/{metadata_db_name}".format(datastore=datastore,
-                                                           metadata_db_name=metadata_db_name)
+    storage_path = "{datastore}/{metadata_db_name}".format(
+                    datastore=datastore, metadata_db_name=metadata_db_name)
+    # Define and open storage DB
     storage = FileStorage.FileStorage(storage_path)
     db = DB(storage)
     connection = db.open()
