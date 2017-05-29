@@ -41,33 +41,46 @@ class CertificateController:
     def list_certificates(self):
         for nodename, a_cert in self.cert_storage.items():
             try:
-                print("="*80)
-                print(nodename)
-                request_id = a_cert['csr_result']['id']
-                request_status = a_cert['csr_result']['status']
-
-                print("Resquest ID: {req_id}".format(req_id=request_id))
-                print("Status {req_status}".format(req_status=request_status))
-                try:
-                    print("Certificate ID: {cert_id}".format(
-                          cert_id=a_cert['csr_result']['certificate']['id']))
-                    print("{last_name} {first_name}".format(
-                          last_name=a_cert['csr_result']['user']['last_name'],
-                          first_name=a_cert['csr_result']
-                                           ['user']['first_name']))
-                except:
-                    print("No certificate found")
-                req_data = get_order_data(request_id)
-                cert = a_cert['certificate']
-                self.cert_storage[nodename] = {'csr_result': req_data,
-                                               'certificate': cert}
-                transaction.commit()
+                for key, value in a_cert['csr_result'].items():
+                    self.print_cert(value)
             except:
                 pass
 
     def download_cert(self, nodename):
+        valid_certs_id = [cert_id for cert_id, cert_info in
+                          self.cert_storage[nodename]['csr_result'].items()
+                          if cert_info['status'] == 'issued'
+                          ]
+        cert_id_downloadable = max(valid_certs_id)
+        self.print_cert(self.cert_storage[nodename]['csr_result']
+                        [cert_id_downloadable])
+        # Remove downalodable cert in case we want to give non downalodable
+        # certs info as a user feedback
+        valid_certs_id.remove(cert_id_downloadable)
         download_cert(self.cert_storage[nodename]['csr_result']
-                                       ['certificate']['id'], nodename)
+                      [cert_id_downloadable]
+                      ['certificate']['id'], nodename)
+
+    def print_cert(self, certificate):
+        print("*"*80)
+        print("{0:<20}{1: <26}".format("Order ID:", certificate['id']))
+        # print("{0:<20}{1: <26}")
+        print("{0:<20}{1: <26}".format("Type:",
+                                       certificate['product']['name']))
+        print("{0:<20}{1: <26}".format("Status:", certificate['status']))
+        try:
+            print("{0:<20}{1: <26}".format("Certificate ID:",
+                                           certificate['certificate']['id']))
+            print("{0:<20}{1: <26}".format("Valid untill:", (certificate
+                                                             ['certificate']
+                                                             ['valid_till'])))
+            print("="*80)
+            print("List of associated dns names:")
+            print("="*80)
+            list(map(lambda a_dns_name: print(a_dns_name),
+                 certificate['certificate']['dns_names']))
+        except:
+            pass
 
     def update_certificates_data(self):
         orders_data = get_orders_data()
@@ -77,8 +90,12 @@ class CertificateController:
                 certificate_data = self.cert_storage[nodename]['certificate']
             except:
                 certificate_data = None
-
-            self.cert_storage[nodename] = {'csr_result': an_order_data,
+            try:
+                csr_result = self.cert_storage[nodename]['csr_result']
+            except:
+                csr_result = {}
+            csr_result[int(an_order_data['id'])] = an_order_data
+            self.cert_storage[nodename] = {'csr_result': csr_result,
                                            'certificate': certificate_data}
         transaction.commit()
 
