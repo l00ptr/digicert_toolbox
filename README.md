@@ -50,9 +50,10 @@ There is a script to directly download a certificate from the CLI
 python3 download_cert.py fqdn.example.org
 ```
 
-It can download certificate managed and known by this tool (So if you didn't 
-submit the csr with the generate_cert.py you will have to run the update_data.py 
-script before downloading.
+Download operation is limited to certificates managed and known by this toolbox,
+So if you didn't submit the CSR with the generate_cert.py you will have to run 
+the update_data.py to populate the datastore and download the certificate 
+through the download script.
 
 
 Special Thanks
