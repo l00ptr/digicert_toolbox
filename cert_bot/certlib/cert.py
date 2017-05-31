@@ -43,6 +43,7 @@ class CertificateController:
             try:
                 for key, value in a_cert['csr_result'].items():
                     self.print_cert(value)
+                    print("\n")
             except:
                 pass
 
@@ -62,7 +63,7 @@ class CertificateController:
                       ['certificate']['id'], nodename)
 
     def print_cert(self, certificate):
-        print("*"*80)
+        print("="*80)
         print("{0:<20}{1: <26}".format("Order ID:", certificate['id']))
         # print("{0:<20}{1: <26}")
         print("{0:<20}{1: <26}".format("Type:",
@@ -74,9 +75,9 @@ class CertificateController:
             print("{0:<20}{1: <26}".format("Valid untill:", (certificate
                                                              ['certificate']
                                                              ['valid_till'])))
-            print("="*80)
+            print("*"*40)
             print("List of associated dns names:")
-            print("="*80)
+            print("*"*40)
             list(map(lambda a_dns_name: print(a_dns_name),
                  certificate['certificate']['dns_names']))
         except:
